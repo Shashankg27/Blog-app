@@ -7,38 +7,25 @@ const jwt = require('jsonwebtoken'); // Import jwt for token verification in thi
 // Get blogs based on query parameters (status, user)
 router.get('/', async (req, res) => {
   try {
-    let query = {};
-    const { status, user: userFilter } = req.query; // Get status and user query parameters
+    const { status, user } = req.query;
+    const query = {};
 
-    // Filter by status if provided
     if (status) {
       query.status = status;
     }
 
-    // Filter by user if 'me' is specified
-    if (userFilter === 'me') {
-      const token = req.header('x-auth-token');
-      if (!token) {
-        return res.status(401).json({ message: 'Authentication required to view your blogs' });
-      }
-      try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        query.user = decoded.user.id; // Filter by authenticated user's ID
-      } catch (err) {
-        console.error('Invalid token for filtering by user:', err.message);
-        return res.status(401).json({ message: 'Invalid token' });
-      }
+    if (user) {
+      query.user = user;
     }
 
-    // Default to published if no status or user filter is provided
-    if (!status && !userFilter) {
-        query.status = 'published';
-    }
+    const blogs = await Blog.find(query)
+      .populate('user', 'username')
+      .sort({ createdAt: -1 });
 
-    const blogs = await Blog.find(query).populate('user', 'username'); // Optionally populate user info
     res.json(blogs);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error('Error fetching blogs:', err);
+    res.status(500).json({ message: 'Error fetching blogs', error: err.message });
   }
 });
 
@@ -46,49 +33,41 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id).populate('user', 'username');
-
-    if (blog == null) {
-      return res.status(404).json({ message: 'Cannot find blog' });
+    if (!blog) {
+      return res.status(404).json({ message: 'Blog not found' });
     }
-
-    // If it's a draft, ensure the requesting user is the owner
-    if (blog.status === 'draft') {
-       const token = req.header('x-auth-token');
-       if (!token) {
-           return res.status(401).json({ message: 'Not authorized to view this draft' });
-       }
-       try {
-           const decoded = jwt.verify(token, process.env.JWT_SECRET);
-           if (blog.user.toString() !== decoded.user.id) {
-                return res.status(401).json({ message: 'Not authorized to view this draft' });
-           }
-       } catch (err) {
-           console.error('Invalid token for viewing draft:', err.message);
-           return res.status(401).json({ message: 'Not authorized to view this draft' });
-       }
-    }
-
     res.json(blog);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error('Error fetching blog:', err);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ message: 'Blog not found' });
+    }
+    res.status(500).json({ message: 'Error fetching blog', error: err.message });
   }
 });
 
 // Create a new blog (protected - linked to authenticated user)
 router.post('/', authMiddleware, async (req, res) => {
-  const blog = new Blog({
-    title: req.body.title,
-    content: req.body.content,
-    tags: req.body.tags,
-    status: req.body.status,
-    user: req.user.id, // Link blog to authenticated user
-  });
-
   try {
-    const newBlog = await blog.save();
-    res.status(201).json(newBlog);
+    const { title, content, tags, status } = req.body;
+    
+    if (!title || !content) {
+      return res.status(400).json({ message: 'Title and content are required' });
+    }
+
+    const blog = new Blog({
+      title,
+      content,
+      tags: tags || [],
+      status: status || 'draft',
+      user: req.user.id
+    });
+
+    await blog.save();
+    res.status(201).json(blog);
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    console.error('Error creating blog:', err);
+    res.status(500).json({ message: 'Error creating blog', error: err.message });
   }
 });
 
@@ -96,32 +75,36 @@ router.post('/', authMiddleware, async (req, res) => {
 router.patch('/:id', authMiddleware, async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id);
-    if (blog == null) {
-      return res.status(404).json({ message: 'Cannot find blog' });
+    
+    if (!blog) {
+      return res.status(404).json({ message: 'Blog not found' });
     }
 
-    // Ensure the logged-in user is the owner of the blog
     if (blog.user.toString() !== req.user.id) {
-      return res.status(401).json({ message: 'User not authorized' });
+      return res.status(403).json({ message: 'Not authorized to update this blog' });
     }
 
-    if (req.body.title != null) {
-      blog.title = req.body.title;
-    }
-    if (req.body.content != null) {
-      blog.content = req.body.content;
-    }
-    if (req.body.tags != null) {
-      blog.tags = req.body.tags;
-    }
-     if (req.body.status != null) {
-      blog.status = req.body.status;
-    }
+    const { title, content, tags, status } = req.body;
+    const updates = {};
 
-    const updatedBlog = await blog.save();
+    if (title) updates.title = title;
+    if (content) updates.content = content;
+    if (tags) updates.tags = tags;
+    if (status) updates.status = status;
+
+    const updatedBlog = await Blog.findByIdAndUpdate(
+      req.params.id,
+      { $set: updates },
+      { new: true, runValidators: true }
+    );
+
     res.json(updatedBlog);
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    console.error('Error updating blog:', err);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ message: 'Blog not found' });
+    }
+    res.status(500).json({ message: 'Error updating blog', error: err.message });
   }
 });
 
@@ -129,19 +112,23 @@ router.patch('/:id', authMiddleware, async (req, res) => {
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id);
-    if (blog == null) {
-      return res.status(404).json({ message: 'Cannot find blog' });
+    
+    if (!blog) {
+      return res.status(404).json({ message: 'Blog not found' });
     }
 
-     // Ensure the logged-in user is the owner of the blog
     if (blog.user.toString() !== req.user.id) {
-      return res.status(401).json({ message: 'User not authorized' });
+      return res.status(403).json({ message: 'Not authorized to delete this blog' });
     }
 
-    await Blog.deleteOne({ _id: req.params.id });
-    res.json({ message: 'Deleted blog' });
+    await blog.deleteOne();
+    res.json({ message: 'Blog deleted successfully' });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error('Error deleting blog:', err);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ message: 'Blog not found' });
+    }
+    res.status(500).json({ message: 'Error deleting blog', error: err.message });
   }
 });
 
