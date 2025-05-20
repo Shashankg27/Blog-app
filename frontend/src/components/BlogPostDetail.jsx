@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useParams } from 'react-router-dom';
+import api from '../utils/axios'; // Import the custom axios instance
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css'; // Import Quill styles
 
 function BlogPostDetail() {
   const { id } = useParams(); // Get blog ID from URL
@@ -12,8 +14,8 @@ function BlogPostDetail() {
     const fetchBlog = async () => {
       try {
         // Fetch single blog post
-        const res = await axios.get(`/api/blogs/${id}`);
-        setBlog(res.data);
+        const response = await api.get(`/api/blogs/${id}`); // Use custom api instance
+        setBlog(response.data);
         setLoading(false);
       } catch (err) {
         setError(err);

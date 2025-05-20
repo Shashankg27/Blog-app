@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AuthContext from '../context/AuthContext';
-import axios from '../utils/axios';
+import api from '../utils/axios';
+import { AuthContext } from '../context/AuthContext';
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -19,21 +19,9 @@ function Login() {
   const onSubmit = async (e) => {
     e.preventDefault();
     try {
-      const user = {
-        username,
-        password,
-      };
-
-      const res = await axios.post('/api/auth/login', user);
-      console.log(res.data);
-      // Store JWT token in local storage
-      localStorage.setItem('token', res.data.token);
-      
-      // Update authentication state in AuthContext
-      await login(res.data.token);
-
-      alert('Login successful!');
-      navigate('/');
+      const res = await api.post('/api/auth/login', { username, password });
+      login(res.data.token, res.data.user);
+      navigate('/my-blogs');
     } catch (err) {
       console.error(err.response.data);
       alert('Login failed.');

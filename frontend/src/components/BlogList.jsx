@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../utils/axios'; // Import the custom axios instance
 import { Link } from 'react-router-dom';
 
 function BlogList() {
@@ -10,7 +10,7 @@ function BlogList() {
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        const response = await axios.get('/api/blogs');
+        const response = await api.get('/api/blogs'); // Use the custom axios instance
         const allBlogsData = response.data;
         
         // Sort blogs by updated_at in descending order

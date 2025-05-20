@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import api from '../utils/axios'; // Import the custom axios instance
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -21,18 +21,10 @@ function Register() {
       alert('Passwords do not match');
     } else {
       try {
-        const newUser = {
+        const res = await api.post('/api/auth/register', {
           username,
           password,
-        };
-
-        const config = {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        };
-
-        const res = await axios.post('/api/auth/register', newUser, config);
+        });
         console.log(res.data);
         // TODO: Handle successful registration (e.g., redirect to login)
         alert('Registration successful!');
