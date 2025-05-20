@@ -1,13 +1,12 @@
 import axios from 'axios';
 
 const instance = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Add a request interceptor to add the auth token to requests
 instance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -21,4 +20,4 @@ instance.interceptors.request.use(
   }
 );
 
-export default instance; 
+export default instance;
