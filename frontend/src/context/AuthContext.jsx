@@ -3,7 +3,7 @@ import axios from '../utils/axios';
 
 const AuthContext = createContext();
 
-const AuthProvider = ({ children }) => {
+export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -73,4 +73,4 @@ const AuthProvider = ({ children }) => {
   );
 };
 
-export default { AuthContext, AuthProvider }; 
+export default AuthContext; 
