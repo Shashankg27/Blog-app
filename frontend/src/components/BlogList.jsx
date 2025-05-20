@@ -12,6 +12,8 @@ function BlogList() {
       try {
         const response = await api.get('/api/blogs'); // Use the custom axios instance
         const allBlogsData = response.data;
+
+        console.log(response);
         
         // Sort blogs by updated_at in descending order
         const sortedBlogs = allBlogsData.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
