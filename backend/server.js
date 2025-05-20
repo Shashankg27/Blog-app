@@ -7,8 +7,18 @@ const blogRoutes = require('./routes/blogRoutes');
 
 const app = express();
 
+// CORS configuration
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production' 
+    ? process.env.FRONTEND_URL // Your frontend URL in production
+    : 'http://localhost:5173', // Vite's default development port
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'x-auth-token']
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Connect to MongoDB
