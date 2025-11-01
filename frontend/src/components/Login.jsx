@@ -21,9 +21,9 @@ function Login() {
     try {
       const res = await api.post('/api/auth/login', { username, password });
       login(res.data.token, res.data.user);
-      navigate('/my-blogs');
+      navigate('/all-blogs');
     } catch (err) {
-      console.error(err.response.data);
+      console.error(err.response?.data || err.message);
       alert('Login failed.');
     }
   };

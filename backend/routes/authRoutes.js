@@ -76,7 +76,14 @@ router.post('/login', async (req, res) => {
       { expiresIn: '1h' },
       (err, token) => {
         if (err) throw err;
-        res.json({ token });
+        // Set token as HTTP-only cookie
+        res.cookie('token', token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production', // Use secure cookies in production (HTTPS)
+          sameSite: 'lax', // CSRF protection
+          maxAge: 3600000 // 1 hour in milliseconds
+        });
+        res.json({ token, message: 'Login successful' });
       }
     );
   } catch (err) {

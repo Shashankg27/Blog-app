@@ -13,6 +13,10 @@ function BlogEditor() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState(''); // Content will now hold HTML from Quill
   const [tags, setTags] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [blogId, setBlogId] = useState(null); // To store the ID of the saved draft or fetched blog
   const [blogOwnerId, setBlogOwnerId] = useState(null); // To store the ID of the blog's owner
   const [loading, setLoading] = useState(true);
@@ -35,6 +39,8 @@ function BlogEditor() {
           setTitle(response.data.title);
           setContent(response.data.content); // Load HTML content into state
           setTags(response.data.tags ? response.data.tags.join(', ') : '');
+          setImageUrl(response.data.imageUrl || '');
+          setImagePreview(response.data.imageUrl ? `${import.meta.env.VITE_API_URL}${response.data.imageUrl}` : null);
           setBlogId(response.data._id); // Set the blog ID for updates
           setBlogOwnerId(response.data.user._id); // Set the owner ID
           setLoading(false);
@@ -122,6 +128,55 @@ function BlogEditor() {
     };
   }, [content, user, loading, authLoading, blogOwnerId]); // Re-run effect when content changes
 
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size must be less than 5MB');
+      return;
+    }
+
+    setImageFile(file);
+    setUploadingImage(true);
+
+    try {
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('image', file);
+
+      // Upload image
+      const uploadResponse = await api.post('/api/blogs/upload-image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      const uploadedImageUrl = uploadResponse.data.imageUrl;
+      setImageUrl(uploadedImageUrl);
+      setImagePreview(`${import.meta.env.VITE_API_URL}${uploadedImageUrl}`);
+      setUploadingImage(false);
+    } catch (err) {
+      console.error('Error uploading image:', err);
+      alert('Failed to upload image. Please try again.');
+      setUploadingImage(false);
+      setImageFile(null);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageUrl('');
+    setImageFile(null);
+    setImagePreview(null);
+  };
+
   const saveDraft = async () => {
     if (!user || (id && blogOwnerId && user._id !== blogOwnerId)) { // Ensure user is logged in and is the owner if editing
       alert('You are not authorized to save this blog.');
@@ -147,6 +202,7 @@ function BlogEditor() {
         content,
         tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag !== ''),
         status: 'draft',
+        imageUrl: imageUrl || undefined,
       };
       let response;
       if (blogId) {
@@ -205,6 +261,7 @@ function BlogEditor() {
         content,
         tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag !== ''),
         status: 'published',
+        imageUrl: imageUrl || undefined,
       };
       let response;
       if (blogId) {
@@ -282,6 +339,42 @@ function BlogEditor() {
           onChange={(e) => setTags(e.target.value)}
           disabled={id && blogOwnerId && user && user._id !== blogOwnerId} // Disable input if not owner
         />
+      </div>
+      <div className="mb-4">
+        <label htmlFor="image" className="block text-gray-700 text-sm font-bold mb-2">
+          Featured Image (Optional):
+        </label>
+        {imagePreview && (
+          <div className="mb-3 relative">
+            <img 
+              src={imagePreview} 
+              alt="Preview" 
+              className="max-w-md max-h-64 rounded-lg shadow-md"
+            />
+            {!(id && blogOwnerId && user && user._id !== blogOwnerId) && (
+              <button
+                type="button"
+                onClick={handleRemoveImage}
+                className="absolute top-2 right-2 bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm"
+              >
+                Remove
+              </button>
+            )}
+          </div>
+        )}
+        {!(id && blogOwnerId && user && user._id !== blogOwnerId) && (
+          <input
+            type="file"
+            id="image"
+            accept="image/*"
+            onChange={handleImageChange}
+            disabled={uploadingImage}
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          />
+        )}
+        {uploadingImage && (
+          <p className="text-blue-600 text-sm mt-2">Uploading image...</p>
+        )}
       </div>
       {!(id && blogOwnerId && user && user._id !== blogOwnerId) && ( // Hide buttons if not owner
         <div className="flex items-center justify-between">

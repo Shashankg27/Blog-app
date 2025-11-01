@@ -61,6 +61,15 @@ function BlogPostDetail() {
         {blog.tags && blog.tags.length > 0 && (
           <p className="text-gray-600 text-sm mb-6">Tags: {blog.tags.join(', ')}</p>
         )}
+        {blog.imageUrl && (
+          <div className="mb-6">
+            <img 
+              src={`${import.meta.env.VITE_API_URL}${blog.imageUrl}`} 
+              alt={blog.title}
+              className="w-full h-auto rounded-lg shadow-md"
+            />
+          </div>
+        )}
         {/* Render HTML content using dangerouslySetInnerHTML */}
         <div
           className="prose prose-lg max-w-none leading-relaxed text-gray-800"

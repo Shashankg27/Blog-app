@@ -3,6 +3,7 @@ const router = express.Router();
 const authMiddleware = require('../middleware/authMiddleware');
 const Blog = require('../models/Blog');
 const jwt = require('jsonwebtoken'); // Import jwt for token verification in this route
+const upload = require('../middleware/upload');
 
 // Get blogs based on query parameters (status, user)
 router.get('/', async (req, res) => {
@@ -29,6 +30,21 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Upload image endpoint (protected)
+router.post('/upload-image', authMiddleware, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image file provided' });
+    }
+    // Return the image URL
+    const imageUrl = `/uploads/${req.file.filename}`;
+    res.json({ imageUrl });
+  } catch (err) {
+    console.error('Error uploading image:', err);
+    res.status(500).json({ message: 'Error uploading image', error: err.message });
+  }
+});
+
 // Get a single blog (publicly show published, drafts only for owner)
 router.get('/:id', async (req, res) => {
   try {
@@ -49,7 +65,7 @@ router.get('/:id', async (req, res) => {
 // Create a new blog (protected - linked to authenticated user)
 router.post('/', authMiddleware, async (req, res) => {
   try {
-    const { title, content, tags, status } = req.body;
+    const { title, content, tags, status, imageUrl } = req.body;
     
     if (!title || !content) {
       return res.status(400).json({ message: 'Title and content are required' });
@@ -60,6 +76,7 @@ router.post('/', authMiddleware, async (req, res) => {
       content,
       tags: tags || [],
       status: status || 'draft',
+      imageUrl: imageUrl || undefined,
       user: req.user.id
     });
 
@@ -84,13 +101,14 @@ router.patch('/:id', authMiddleware, async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to update this blog' });
     }
 
-    const { title, content, tags, status } = req.body;
+    const { title, content, tags, status, imageUrl } = req.body;
     const updates = {};
 
     if (title) updates.title = title;
     if (content) updates.content = content;
     if (tags) updates.tags = tags;
     if (status) updates.status = status;
+    if (imageUrl !== undefined) updates.imageUrl = imageUrl || null;
 
     const updatedBlog = await Blog.findByIdAndUpdate(
       req.params.id,

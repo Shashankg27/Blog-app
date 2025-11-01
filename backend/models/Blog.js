@@ -12,6 +12,10 @@ const BlogSchema = new mongoose.Schema({
   tags: {
     type: [String],
   },
+  imageUrl: {
+    type: String,
+    required: false,
+  },
   status: {
     type: String,
     enum: ['draft', 'published'],

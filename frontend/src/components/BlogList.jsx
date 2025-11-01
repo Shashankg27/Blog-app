@@ -1,16 +1,33 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import api from '../utils/axios'; // Import the custom axios instance
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import AuthContext from '../context/AuthContext';
 
 function BlogList() {
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const location = useLocation();
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        const response = await api.get('/api/blogs'); // Use the custom axios instance
+        let response;
+        const currentPath = location.pathname;
+
+        // Fetch blogs based on current route
+        if (currentPath === '/my-blogs') {
+          // Fetch only user's published blogs
+          response = await api.get(`/api/blogs?user=${user?._id}&status=published`);
+        } else if (currentPath === '/my-drafts') {
+          // Fetch only user's draft blogs
+          response = await api.get(`/api/blogs?user=${user?._id}&status=draft`);
+        } else {
+          // Fetch all blogs (for /all-blogs)
+          response = await api.get('/api/blogs');
+        }
+
         const allBlogsData = response.data;
 
         console.log(response);
@@ -26,8 +43,11 @@ function BlogList() {
       }
     };
   
-    fetchBlogs();
-  }, []);
+    // Only fetch if user is available for protected routes
+    if (location.pathname === '/all-blogs' || user) {
+      fetchBlogs();
+    }
+  }, [location.pathname, user]);
 
 
   if (loading) {
@@ -46,12 +66,38 @@ function BlogList() {
     );
   }
 
+  const handleDelete = async (blogId) => {
+    if (!window.confirm('Are you sure you want to delete this blog? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await api.delete(`/api/blogs/${blogId}`);
+      // Remove the deleted blog from the list
+      setBlogs(blogs.filter(blog => blog._id !== blogId));
+    } catch (err) {
+      console.error('Error deleting blog:', err);
+      alert('Failed to delete blog. Please try again.');
+    }
+  };
+
+  const isMyBlogsRoute = location.pathname === '/my-blogs';
+  const isMyDraftsRoute = location.pathname === '/my-drafts';
+  const showDeleteButtons = isMyBlogsRoute || isMyDraftsRoute;
+
   const publishedBlogs = blogs.filter(blog => blog.status === 'published');
   const draftBlogs = blogs.filter(blog => blog.status === 'draft');
 
+  // Determine page title based on route
+  const getPageTitle = () => {
+    if (isMyBlogsRoute) return 'My Published Blogs';
+    if (isMyDraftsRoute) return 'My Drafts';
+    return 'All Blog Posts';
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8 text-gray-800">All Blog Posts</h1>
+      <h1 className="text-3xl font-bold mb-8 text-gray-800">{getPageTitle()}</h1>
 
       {publishedBlogs.length > 0 && (
         <div className="mb-10">
@@ -59,12 +105,41 @@ function BlogList() {
           <ul className="space-y-6">
             {publishedBlogs.map(blog => (
               <li key={blog._id} className="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300 ease-in-out">
-                <Link to={`/blogs/${blog._id}`} className="block text-blue-600 hover:text-blue-800 transition-colors duration-300 ease-in-out">
-                  <h3 className="text-xl font-bold mb-2">{blog.title}</h3>
-                </Link>
-                <p className="text-gray-600 text-sm">Published on: {new Date(blog.updated_at).toLocaleDateString()}</p>
-                {/* Optional: Display a short excerpt of the content */}
-                {/* <p className="text-gray-700 mt-3">{blog.content.replace(/<[^>]*>/g, '').substring(0, 200)}...</p> */}
+                <div className="flex justify-between items-start gap-4">
+                  <div className="flex-1">
+                    {blog.imageUrl && (
+                      <div className="mb-3">
+                        <img 
+                          src={`${import.meta.env.VITE_API_URL}${blog.imageUrl}`} 
+                          alt={blog.title}
+                          className="w-full max-w-xs h-48 object-cover rounded-lg shadow-sm"
+                        />
+                      </div>
+                    )}
+                    <Link to={`/blogs/${blog._id}`} className="block text-blue-600 hover:text-blue-800 transition-colors duration-300 ease-in-out">
+                      <h3 className="text-xl font-bold mb-2">{blog.title}</h3>
+                    </Link>
+                    <p className="text-gray-600 text-sm">Published on: {new Date(blog.updated_at).toLocaleDateString()}</p>
+                    {/* Optional: Display a short excerpt of the content */}
+                    {/* <p className="text-gray-700 mt-3">{blog.content.replace(/<[^>]*>/g, '').substring(0, 200)}...</p> */}
+                  </div>
+                  {showDeleteButtons && (
+                    <div className="ml-4 flex gap-2">
+                      <Link
+                        to={`/edit-blog/${blog._id}`}
+                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm transition-colors"
+                      >
+                        Edit
+                      </Link>
+                      <button
+                        onClick={() => handleDelete(blog._id)}
+                        className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
@@ -77,12 +152,26 @@ function BlogList() {
           <ul className="space-y-6">
             {draftBlogs.map(blog => (
               <li key={blog._id} className="bg-gray-50 p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300 ease-in-out">
-                 <Link to={`/edit-blog/${blog._id}`} className="block text-gray-700 hover:text-gray-900 transition-colors duration-300 ease-in-out">
-                  <h3 className="text-xl font-bold mb-2">{blog.title || 'Untitled Draft'}</h3>
-                 </Link>
-                 <p className="text-gray-600 text-sm">Last saved: {new Date(blog.updated_at).toLocaleString()}</p>
-                 {/* Optional: Display a short excerpt of the content */}
-                 {/* <p className="text-gray-700 mt-3">{blog.content.replace(/<[^>]*>/g, '').substring(0, 200)}...</p> */}
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <Link to={`/edit-blog/${blog._id}`} className="block text-gray-700 hover:text-gray-900 transition-colors duration-300 ease-in-out">
+                      <h3 className="text-xl font-bold mb-2">{blog.title || 'Untitled Draft'}</h3>
+                    </Link>
+                    <p className="text-gray-600 text-sm">Last saved: {new Date(blog.updated_at).toLocaleString()}</p>
+                    {/* Optional: Display a short excerpt of the content */}
+                    {/* <p className="text-gray-700 mt-3">{blog.content.replace(/<[^>]*>/g, '').substring(0, 200)}...</p> */}
+                  </div>
+                  {showDeleteButtons && (
+                    <div className="ml-4 flex gap-2">
+                      <button
+                        onClick={() => handleDelete(blog._id)}
+                        className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
