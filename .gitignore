@@ -3,5 +3,7 @@ backend/node_modules
 frontend/.env
 backend/.env
 
-frontend/**/*.{js,jsx}
-backend/**/*.{js,jsx}
+frontend/**/*.jsx
+frontend/**/*.js
+backend/**/*.jsx
+backend/**/*.js
