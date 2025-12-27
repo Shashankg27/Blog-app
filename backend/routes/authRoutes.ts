@@ -88,7 +88,7 @@ router.post('/login', async (req: Request<{}, {}, LoginBody>, res: Response): Pr
     jwt.sign(
       payload,
       process.env.JWT_SECRET as string,
-      { expiresIn: '1h' },
+      { expiresIn: '10h' },
       (err: Error | null, token?: string) => {
         if (err) {
           throw err;

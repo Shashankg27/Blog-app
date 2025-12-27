@@ -64,8 +64,10 @@ const BlogList: React.FC = () => {
   const isMyDraftsRoute = location.pathname === '/my-drafts';
   const showDeleteButtons = isMyBlogsRoute || isMyDraftsRoute;
 
-  const publishedBlogs = blogs.filter(blog => blog.status === 'published');
-  const draftBlogs = blogs.filter(blog => blog.status === 'draft');
+  const [publishedBlogs, setPublishedBlogs] = useState<Blog[]>([]);
+  const [draftBlogs, setDraftBlogs] = useState<Blog[]>([]);
+  setPublishedBlogs(blogs.filter(blog => blog.status === 'published'));
+  if(user && user._id !== null) setDraftBlogs(blogs.filter(blog => (blog.status === 'draft' && blog.user._id === user._id)));
 
   const getPageTitle = (): string => {
     if (isMyBlogsRoute) return 'My Published Blogs';
