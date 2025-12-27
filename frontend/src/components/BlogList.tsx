@@ -10,6 +10,8 @@ const BlogList: React.FC = () => {
   const [error, setError] = useState<Error | null>(null);
   const location = useLocation();
   const context = useContext(AuthContext);
+  const [publishedBlogs, setPublishedBlogs] = useState<Blog[]>([]);
+  const [draftBlogs, setDraftBlogs] = useState<Blog[]>([]);
 
   if (!context) {
     throw new Error('AuthContext must be used within AuthProvider');
@@ -45,6 +47,10 @@ const BlogList: React.FC = () => {
       fetchBlogs();
     }
   }, [location.pathname, user]);
+  useEffect(() => {
+    setPublishedBlogs(blogs.filter(blog => blog.status === 'published'));
+    if(user && user._id !== null) setDraftBlogs(blogs.filter(blog => (blog.status === 'draft' && blog.user._id === user._id)));
+  }, [blogs])
 
   const handleDelete = async (blogId: string): Promise<void> => {
     if (!window.confirm('Are you sure you want to delete this blog? This action cannot be undone.')) {
@@ -64,11 +70,7 @@ const BlogList: React.FC = () => {
   const isMyDraftsRoute = location.pathname === '/my-drafts';
   const showDeleteButtons = isMyBlogsRoute || isMyDraftsRoute;
 
-  const [publishedBlogs, setPublishedBlogs] = useState<Blog[]>([]);
-  const [draftBlogs, setDraftBlogs] = useState<Blog[]>([]);
-  setPublishedBlogs(blogs.filter(blog => blog.status === 'published'));
-  if(user && user._id !== null) setDraftBlogs(blogs.filter(blog => (blog.status === 'draft' && blog.user._id === user._id)));
-
+  
   const getPageTitle = (): string => {
     if (isMyBlogsRoute) return 'My Published Blogs';
     if (isMyDraftsRoute) return 'My Drafts';
