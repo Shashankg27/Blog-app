@@ -21,19 +21,16 @@ interface JwtPayload {
   };
 }
 
-// Register new user
 router.post('/register', async (req: Request<{}, {}, RegisterBody>, res: Response): Promise<void> => {
   try {
     const { username, password } = req.body;
 
-    // Check if user already exists
     let user = await User.findOne({ username });
     if (user) {
       res.status(400).json({ message: 'User already exists' });
       return;
     }
 
-    // Create new user
     user = new User({
       username,
       password,
@@ -41,7 +38,6 @@ router.post('/register', async (req: Request<{}, {}, RegisterBody>, res: Respons
 
     await user.save();
 
-    // Generate JWT
     const payload: JwtPayload = {
       user: {
         id: user.id,
@@ -67,26 +63,22 @@ router.post('/register', async (req: Request<{}, {}, RegisterBody>, res: Respons
   }
 });
 
-// Login user
 router.post('/login', async (req: Request<{}, {}, LoginBody>, res: Response): Promise<void> => {
   try {
     const { username, password } = req.body;
 
-    // Check if user exists
     let user = await User.findOne({ username });
     if (!user) {
       res.status(400).json({ message: 'Invalid credentials' });
       return;
     }
 
-    // Validate password
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
       res.status(400).json({ message: 'Invalid credentials' });
       return;
     }
 
-    // Generate JWT
     const payload: JwtPayload = {
       user: {
         id: user.id,
@@ -102,12 +94,12 @@ router.post('/login', async (req: Request<{}, {}, LoginBody>, res: Response): Pr
           throw err;
         }
         if (token) {
-          // Set token as HTTP-only cookie
           res.cookie('token', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // Use secure cookies in production (HTTPS)
-            sameSite: 'lax', // CSRF protection
-            maxAge: 3600000 // 1 hour in milliseconds
+            secure: true,
+            sameSite: 'none',
+            maxAge: 3600000,
+            path: '/'
           });
           res.json({ token, message: 'Login successful' });
         }
@@ -119,14 +111,12 @@ router.post('/login', async (req: Request<{}, {}, LoginBody>, res: Response): Pr
   }
 });
 
-// Get user information
 router.get('/me', authMiddleware, async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.user) {
       res.status(401).json({ message: 'Unauthorized' });
       return;
     }
-    // console.log(req.user);
     const user = await User.findById(req.user.id).select('-password');
     res.json(user);
   } catch (err: any) {
@@ -136,4 +126,3 @@ router.get('/me', authMiddleware, async (req: Request, res: Response): Promise<v
 });
 
 export default router;
-

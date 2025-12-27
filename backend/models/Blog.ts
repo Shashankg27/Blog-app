@@ -47,7 +47,6 @@ const BlogSchema: Schema = new Schema({
   },
 });
 
-// Update updated_at on save
 BlogSchema.pre('save', function(next) {
   this.updated_at = new Date();
   next();

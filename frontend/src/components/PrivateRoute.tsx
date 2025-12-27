@@ -17,7 +17,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ element: Element, ...rest }
   const { isAuthenticated, loading }: AuthContextType = context;
 
   if (loading) {
-    return <div>Loading...</div>; // Or a spinner component
+    return <div>Loading...</div>;
   }
 
   return isAuthenticated ? <Element {...rest} /> : <Navigate to="/login" />;

@@ -19,7 +19,6 @@ const UserSchema: Schema = new Schema({
   },
 });
 
-// Hash password before saving
 UserSchema.pre('save', async function (this: IUser, next) {
   if (!this.isModified('password')) {
     return next();
@@ -29,7 +28,6 @@ UserSchema.pre('save', async function (this: IUser, next) {
   next();
 });
 
-// Method to match passwords
 UserSchema.methods.matchPassword = async function (enteredPassword: string): Promise<boolean> {
   return await bcrypt.compare(enteredPassword, this.password);
 };

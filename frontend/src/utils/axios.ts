@@ -1,6 +1,5 @@
 import axios, { InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 
-// Log the API URL for debugging
 console.log('API URL:', import.meta.env.VITE_API_URL);
 
 const instance = axios.create({
@@ -8,10 +7,9 @@ const instance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // Send cookies with requests
+  withCredentials: true,
 });
 
-// Add a request interceptor to add the auth token to requests
 instance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('token');
@@ -25,7 +23,6 @@ instance.interceptors.request.use(
   }
 );
 
-// Add a response interceptor for debugging
 instance.interceptors.response.use(
   (response: AxiosResponse) => response,
   (error: AxiosError) => {

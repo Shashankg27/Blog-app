@@ -27,7 +27,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [user, setUser] = useState<User | null>(null);
 
-  // Check for token on initial load and set auth state
   useEffect(() => {
     const checkAuthState = async (): Promise<void> => {
       if (token) {
@@ -50,9 +49,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     checkAuthState();
-  }, [token]); // Re-run when token changes
+  }, [token]);
 
-  // Set token in local storage whenever it changes
   useEffect(() => {
     if (token) {
       localStorage.setItem('token', token);

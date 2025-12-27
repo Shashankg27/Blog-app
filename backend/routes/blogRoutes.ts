@@ -26,7 +26,6 @@ interface UpdateBlogBody {
   imageUrl?: string;
 }
 
-// Get blogs based on query parameters (status, user)
 router.get('/', async (req: Request<{}, {}, {}, BlogQuery>, res: Response): Promise<void> => {
   try {
     const { status, user } = req.query;
@@ -51,14 +50,12 @@ router.get('/', async (req: Request<{}, {}, {}, BlogQuery>, res: Response): Prom
   }
 });
 
-// Upload image endpoint (protected)
 router.post('/upload-image', authMiddleware, upload.single('image'), async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.file) {
       res.status(400).json({ message: 'No image file provided' });
       return;
     }
-    // Return the image URL
     const imageUrl = `/uploads/${req.file.filename}`;
     res.json({ imageUrl });
   } catch (err: any) {
@@ -67,7 +64,6 @@ router.post('/upload-image', authMiddleware, upload.single('image'), async (req:
   }
 });
 
-// Get a single blog (publicly show published, drafts only for owner)
 router.get('/:id', async (req: Request<{ id: string }>, res: Response): Promise<void> => {
   try {
     const blog = await Blog.findById(req.params.id).populate('user', 'username');
@@ -86,7 +82,6 @@ router.get('/:id', async (req: Request<{ id: string }>, res: Response): Promise<
   }
 });
 
-// Create a new blog (protected - linked to authenticated user)
 router.post('/', authMiddleware, async (req: Request<{}, {}, CreateBlogBody>, res: Response): Promise<void> => {
   try {
     if (!req.user) {
@@ -118,7 +113,6 @@ router.post('/', authMiddleware, async (req: Request<{}, {}, CreateBlogBody>, re
   }
 });
 
-// Update a blog (protected - only by owner)
 router.patch('/:id', authMiddleware, async (req: Request<{ id: string }, {}, UpdateBlogBody>, res: Response): Promise<void> => {
   try {
     if (!req.user) {
@@ -164,7 +158,6 @@ router.patch('/:id', authMiddleware, async (req: Request<{ id: string }, {}, Upd
   }
 });
 
-// Delete a blog (protected - only by owner)
 router.delete('/:id', authMiddleware, async (req: Request<{ id: string }>, res: Response): Promise<void> => {
   try {
     if (!req.user) {
