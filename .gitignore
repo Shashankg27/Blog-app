@@ -12,3 +12,4 @@ frontend/*.jsx
 frontend/*.js
 backend/*.jsx
 backend/*.js
+backend/uploads/*
