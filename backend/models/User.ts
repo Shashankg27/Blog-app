@@ -20,7 +20,7 @@ const UserSchema: Schema = new Schema({
 });
 
 // Hash password before saving
-UserSchema.pre('save', async function (next) {
+UserSchema.pre('save', async function (this: IUser, next) {
   if (!this.isModified('password')) {
     return next();
   }
@@ -37,4 +37,3 @@ UserSchema.methods.matchPassword = async function (enteredPassword: string): Pro
 const User = mongoose.model<IUser>('User', UserSchema);
 
 export default User;
-
