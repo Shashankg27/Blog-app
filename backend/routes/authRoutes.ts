@@ -127,6 +127,7 @@ router.get('/me', authMiddleware, async (req: Request, res: Response): Promise<v
       res.status(401).json({ message: 'Unauthorized' });
       return;
     }
+    // console.log(req.user);
     const user = await User.findById(req.user.id).select('-password');
     res.json(user);
   } catch (err: any) {

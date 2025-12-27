@@ -1,7 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 
-interface JwtPayload {
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET is not defined in environment variables");
+}
+
+interface DecodedToken extends JwtPayload {
   user: {
     id: string;
   };
@@ -19,8 +25,9 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction): void =
 
   // Verify token
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
+    const decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
     req.user = decoded.user;
+    // console.log("user:", req.user);
     next();
   } catch (err) {
     res.status(401).json({ message: 'Token is not valid' });

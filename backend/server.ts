@@ -10,9 +10,13 @@ import blogRoutes from './routes/blogRoutes';
 
 const app = express();
 
+const FRONTEND_URL = process.env.FRONTEND_URL;
+if(!FRONTEND_URL){
+  throw new Error("FRONTEND_URL is not defined in environment variables");
+}
 // CORS configuration
 const corsOptions: cors.CorsOptions = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173', // Allow frontend origin
+  origin: FRONTEND_URL, // Allow frontend origin
   credentials: true, // Allow cookies to be sent
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'x-auth-token'],
@@ -38,9 +42,11 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction): void => {
 // Connect to MongoDB with retry logic
 const connectDB = async (): Promise<void> => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/blogging', {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+    const MONGO_URI = process.env.MONGODB_URI;
+    if (!MONGO_URI) {
+      throw new Error("MONGODB_URI is not defined in environment variables");
+    }
+    await mongoose.connect(MONGO_URI, {
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
     } as mongoose.ConnectOptions);

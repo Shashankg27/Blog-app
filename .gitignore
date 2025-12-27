@@ -7,3 +7,7 @@ frontend/**/*.jsx
 frontend/**/*.js
 backend/**/*.jsx
 backend/**/*.js
+frontend/*.jsx
+frontend/*.js
+backend/*.jsx
+backend/*.js
