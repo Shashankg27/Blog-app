@@ -5,8 +5,8 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import path from 'path';
-import authRoutes from './routes/authRoutes';
-import blogRoutes from './routes/blogRoutes';
+import authRoutes from './routes/authRoutes.js';
+import blogRoutes from './routes/blogRoutes.js';
 
 const app = express();
 

@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
-import authMiddleware from '../middleware/authMiddleware';
-import Blog from '../models/Blog';
-import upload from '../middleware/upload';
+import authMiddleware from '../middleware/authMiddleware.js';
+import Blog from '../models/Blog.js';
+import upload from '../middleware/upload.js';
 
 const router = express.Router();
 
