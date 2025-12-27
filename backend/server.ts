@@ -1,5 +1,4 @@
-import dotenv from 'dotenv';
-dotenv.config();
+import 'dotenv/config';
 import express, { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
@@ -7,6 +6,10 @@ import cookieParser from 'cookie-parser';
 import path from 'path';
 import authRoutes from './routes/authRoutes.js';
 import blogRoutes from './routes/blogRoutes.js';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -31,7 +34,7 @@ app.use(cookieParser());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Error handling middleware
-app.use((err: Error, req: Request, res: Response, next: NextFunction): void => {
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction): void => {
   console.error(err.stack);
   res.status(500).json({ 
     message: 'Something went wrong!',
@@ -61,7 +64,7 @@ const connectDB = async (): Promise<void> => {
 connectDB();
 
 // Basic route
-app.get('/', (req: Request, res: Response): void => {
+app.get('/', (_req: Request, res: Response): void => {
   res.send('Blog API is running');
 });
 
@@ -72,7 +75,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/blogs', blogRoutes);
 
 // Handle 404 routes
-app.use((req: Request, res: Response): void => {
+app.use((_req: Request, res: Response): void => {
   res.status(404).json({ message: 'Route not found' });
 });
 
