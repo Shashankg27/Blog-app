@@ -4,6 +4,8 @@ frontend/.env
 backend/.env
 backend/dist
 
+JSX-JS-Files
+
 frontend/**/*.jsx
 frontend/**/*.js
 backend/**/*.jsx

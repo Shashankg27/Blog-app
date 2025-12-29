@@ -22,7 +22,7 @@ const App: React.FC = () => {
       <div className="App">
         <nav className="bg-gray-800 p-4">
           <div className="container mx-auto flex justify-between items-center">
-            <Link to="/all-blogs" className="text-white text-lg font-bold">Blog App</Link>
+            <Link to="/all-blogs" className="text-white text-lg font-bold">BlogSite</Link>
             <div>
               <Link to="/all-blogs" className="text-gray-300 hover:text-white mr-4">All Blogs</Link>
               {isAuthenticated ? (

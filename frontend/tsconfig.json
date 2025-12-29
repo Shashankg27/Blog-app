@@ -23,7 +23,7 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src"],
+  "include": ["src", "../JSX-JS-Files/App.jsx", "../JSX-JS-Files/main.jsx", "../JSX-JS-Files/AuthContext.jsx", "../JSX-JS-Files/Register.jsx", "../JSX-JS-Files/BlogEditor.jsx", "../JSX-JS-Files/BlogList.jsx"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
 
