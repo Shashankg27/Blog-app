@@ -207,7 +207,7 @@ const BlogEditor: React.FC = () => {
         setIsEditing(true);
         setBlog(response.data);
       }
-      console.log('Auto-save successful.');
+      alert('Auto-save successful.');
     } catch (err) {
       console.error('Auto-save failed:', err);
     }
@@ -292,102 +292,107 @@ const BlogEditor: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">{id ? 'Edit Blog Post' : 'Create New Blog Post'}</h1>
-      <div className="mb-4">
-        <label htmlFor="title" className="block text-gray-700 text-sm font-bold mb-2">Title:</label>
-        <input
-          type="text"
-          id="title"
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          value={title}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
-          disabled={!!(id && blogOwnerId && user && user._id !== blogOwnerId)}
-        />
+    <div className="container mx-auto">
+
+      <div className='min-h-[15vh] text-center bg-[linear-gradient(180deg,#c7ddff_0%,#ffffff_64%)]'>
+          <h1 className="text-2xl font-bold mb-6 pt-5">{id ? 'Edit Blog Post' : 'Create New Blog Post'}</h1>
       </div>
-      <div className="mb-4">
-        <label htmlFor="content" className="block text-gray-700 text-sm font-bold mb-2">Content:</label>
-        <ReactQuill
-          value={content}
-          onChange={setContent}
-          className="h-64 mb-12"
-          readOnly={!!(id && blogOwnerId && user && user._id !== blogOwnerId)}
-        />
-      </div>
-      <div className="mb-4 mt-12">
-        <label htmlFor="tags" className="block text-gray-700 text-sm font-bold mb-2">Tags (comma-separated):</label>
-        <input
-          type="text"
-          id="tags"
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          value={tags}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => setTags(e.target.value)}
-          disabled={!!(id && blogOwnerId && user && user._id !== blogOwnerId)}
-        />
-      </div>
-      <div className="mb-4">
-        <label htmlFor="image" className="block text-gray-700 text-sm font-bold mb-2">
-          Featured Image (Optional):
-        </label>
-        {imagePreview && (
-          <div className="mb-3 relative">
-            <img 
-              src={imagePreview} 
-              alt="Preview" 
-              className="max-w-md max-h-64 rounded-lg shadow-md"
+      <div className='px-8 pb-5'>
+        <div className="mb-4 ">
+          <label htmlFor="title" className="block text-gray-700 text-sm font-bold mb-2">Title:</label>
+          <input
+            type="text"
+            id="title"
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            value={title}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
+            disabled={!!(id && blogOwnerId && user && user._id !== blogOwnerId)}
+          />
+        </div>
+        <div className="mb-4">
+          <label htmlFor="content" className="block text-gray-700 text-sm font-bold mb-2">Content:</label>
+          <ReactQuill
+            value={content}
+            onChange={setContent}
+            className="h-64 mb-12"
+            readOnly={!!(id && blogOwnerId && user && user._id !== blogOwnerId)}
+          />
+        </div>
+        <div className="mb-4 mt-12">
+          <label htmlFor="tags" className="block text-gray-700 text-sm font-bold mb-2">Tags (comma-separated):</label>
+          <input
+            type="text"
+            id="tags"
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            value={tags}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setTags(e.target.value)}
+            disabled={!!(id && blogOwnerId && user && user._id !== blogOwnerId)}
+          />
+        </div>
+        <div className="mb-4">
+          <label htmlFor="image" className="block text-gray-700 text-sm font-bold mb-2">
+            Featured Image (Optional):
+          </label>
+          {imagePreview && (
+            <div className="mb-3 relative">
+              <img 
+                src={imagePreview} 
+                alt="Preview" 
+                className="max-w-md max-h-64 rounded-lg shadow-md"
+              />
+              {!(id && blogOwnerId && user && user._id !== blogOwnerId) && (
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="absolute top-2 right-2 bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+          )}
+          {!(id && blogOwnerId && user && user._id !== blogOwnerId) && (
+            <input
+              type="file"
+              id="image"
+              accept="image/*"
+              onChange={handleImageChange}
+              disabled={uploadingImage}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             />
-            {!(id && blogOwnerId && user && user._id !== blogOwnerId) && (
+          )}
+          {uploadingImage && (
+            <p className="text-blue-600 text-sm mt-2">Uploading image...</p>
+          )}
+        </div>
+        {!(id && blogOwnerId && user && user._id !== blogOwnerId) && (
+          <div className="flex items-center justify-between">
+            <button
+              className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              type="button"
+              onClick={handleSaveDraft}
+            >
+              Save as Draft
+            </button>
+            <button
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              type="button"
+              onClick={handlePublish}
+            >
+              {id ? 'Update and Publish' : 'Publish'}
+            </button>
+            {id && (
               <button
+                className="bg-red-500 hover:bg-red-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                 type="button"
-                onClick={handleRemoveImage}
-                className="absolute top-2 right-2 bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm"
+                onClick={handleDelete}
               >
-                Remove
+                Delete
               </button>
             )}
           </div>
         )}
-        {!(id && blogOwnerId && user && user._id !== blogOwnerId) && (
-          <input
-            type="file"
-            id="image"
-            accept="image/*"
-            onChange={handleImageChange}
-            disabled={uploadingImage}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          />
-        )}
-        {uploadingImage && (
-          <p className="text-blue-600 text-sm mt-2">Uploading image...</p>
-        )}
       </div>
-      {!(id && blogOwnerId && user && user._id !== blogOwnerId) && (
-        <div className="flex items-center justify-between">
-          <button
-            className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            type="button"
-            onClick={handleSaveDraft}
-          >
-            Save as Draft
-          </button>
-          <button
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            type="button"
-            onClick={handlePublish}
-          >
-            {id ? 'Update and Publish' : 'Publish'}
-          </button>
-          {id && (
-            <button
-              className="bg-red-500 hover:bg-red-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-              type="button"
-              onClick={handleDelete}
-            >
-              Delete
-            </button>
-          )}
-        </div>
-      )}
     </div>
   );
 };
