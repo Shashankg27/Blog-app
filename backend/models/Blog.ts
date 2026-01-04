@@ -7,6 +7,9 @@ export interface IBlog extends Document {
   imageUrl?: string;
   status: 'draft' | 'published';
   user: mongoose.Types.ObjectId;
+  viewCount: number;
+  likes: mongoose.Types.ObjectId[];
+  dislikes: mongoose.Types.ObjectId[];
   created_at: Date;
   updated_at: Date;
 }
@@ -37,6 +40,18 @@ const BlogSchema: Schema = new Schema({
     ref: 'User',
     required: true,
   },
+  viewCount: {
+    type: Number,
+    default: 0,
+  },
+  likes: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  }],
+  dislikes: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  }],
   created_at: {
     type: Date,
     default: Date.now,

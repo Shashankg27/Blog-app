@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import authMiddleware from '../middleware/authMiddleware.js';
 import Blog from '../models/Blog.js';
+import Comment from '../models/Comment.js';
 import upload from '../middleware/upload.js';
 
 const router = express.Router();
@@ -66,12 +67,26 @@ router.post('/upload-image', authMiddleware, upload.single('image'), async (req:
 
 router.get('/:id', async (req: Request<{ id: string }>, res: Response): Promise<void> => {
   try {
-    const blog = await Blog.findById(req.params.id).populate('user', 'username');
+    const blog = await Blog.findById(req.params.id)
+      .populate('user', 'username firstName lastName');
+    
     if (!blog) {
       res.status(404).json({ message: 'Blog not found' });
       return;
     }
-    res.json(blog);
+
+    blog.viewCount = (blog.viewCount || 0) + 1;
+    await blog.save();
+
+    const comments = await Comment.find({ blog: req.params.id })
+      .populate('user', 'username firstName lastName')
+      .sort({ created_at: -1 });
+
+    const blogObj = blog.toObject();
+    blogObj.likes = blog.likes?.map(id => id.toString()) || [];
+    blogObj.dislikes = blog.dislikes?.map(id => id.toString()) || [];
+
+    res.json({ ...blogObj, comments });
   } catch (err: any) {
     console.error('Error fetching blog:', err);
     if (err.kind === 'ObjectId') {
@@ -186,6 +201,123 @@ router.delete('/:id', authMiddleware, async (req: Request<{ id: string }>, res: 
       return;
     }
     res.status(500).json({ message: 'Error deleting blog', error: err.message });
+  }
+});
+
+router.post('/:id/like', authMiddleware, async (req: Request<{ id: string }>, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const blog = await Blog.findById(req.params.id);
+    if (!blog) {
+      res.status(404).json({ message: 'Blog not found' });
+      return;
+    }
+
+    const userId = req.user.id;
+    const likesArray = blog.likes || [];
+    const dislikesArray = blog.dislikes || [];
+
+    if (likesArray.some(id => id.toString() === userId)) {
+      blog.likes = likesArray.filter(id => id.toString() !== userId);
+    } else {
+      blog.likes = [...likesArray.filter(id => id.toString() !== userId), userId as any];
+      blog.dislikes = dislikesArray.filter(id => id.toString() !== userId);
+    }
+
+    await blog.save();
+    const likesArrayStr = blog.likes?.map(id => id.toString()) || [];
+    const dislikesArrayStr = blog.dislikes?.map(id => id.toString()) || [];
+    res.json({ likes: likesArrayStr, dislikes: dislikesArrayStr, userLiked: likesArrayStr.includes(userId) });
+  } catch (err: any) {
+    console.error('Error liking blog:', err);
+    res.status(500).json({ message: 'Error liking blog', error: err.message });
+  }
+});
+
+router.post('/:id/dislike', authMiddleware, async (req: Request<{ id: string }>, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const blog = await Blog.findById(req.params.id);
+    if (!blog) {
+      res.status(404).json({ message: 'Blog not found' });
+      return;
+    }
+
+    const userId = req.user.id;
+    const likesArray = blog.likes || [];
+    const dislikesArray = blog.dislikes || [];
+
+    if (dislikesArray.some(id => id.toString() === userId)) {
+      blog.dislikes = dislikesArray.filter(id => id.toString() !== userId);
+    } else {
+      blog.dislikes = [...dislikesArray.filter(id => id.toString() !== userId), userId as any];
+      blog.likes = likesArray.filter(id => id.toString() !== userId);
+    }
+
+    await blog.save();
+    const likesArrayStr = blog.likes?.map(id => id.toString()) || [];
+    const dislikesArrayStr = blog.dislikes?.map(id => id.toString()) || [];
+    res.json({ likes: likesArrayStr, dislikes: dislikesArrayStr, userDisliked: dislikesArrayStr.includes(userId) });
+  } catch (err: any) {
+    console.error('Error disliking blog:', err);
+    res.status(500).json({ message: 'Error disliking blog', error: err.message });
+  }
+});
+
+router.post('/:id/comments', authMiddleware, async (req: Request<{ id: string }, {}, { content: string }>, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const { content } = req.body;
+    if (!content || content.trim() === '') {
+      res.status(400).json({ message: 'Comment content is required' });
+      return;
+    }
+
+    const blog = await Blog.findById(req.params.id);
+    if (!blog) {
+      res.status(404).json({ message: 'Blog not found' });
+      return;
+    }
+
+    const comment = new Comment({
+      content: content.trim(),
+      blog: req.params.id,
+      user: req.user.id,
+    });
+
+    await comment.save();
+    const populatedComment = await Comment.findById(comment._id)
+      .populate('user', 'username firstName lastName');
+
+    res.status(201).json(populatedComment);
+  } catch (err: any) {
+    console.error('Error adding comment:', err);
+    res.status(500).json({ message: 'Error adding comment', error: err.message });
+  }
+});
+
+router.get('/:id/comments', async (req: Request<{ id: string }>, res: Response): Promise<void> => {
+  try {
+    const comments = await Comment.find({ blog: req.params.id })
+      .populate('user', 'username firstName lastName')
+      .sort({ created_at: -1 });
+
+    res.json(comments);
+  } catch (err: any) {
+    console.error('Error fetching comments:', err);
+    res.status(500).json({ message: 'Error fetching comments', error: err.message });
   }
 });
 

@@ -3,7 +3,12 @@ import bcrypt from 'bcryptjs';
 
 export interface IUser extends Document {
   username: string;
+  email: string;
+  firstName: string;
+  lastName: string;
   password: string;
+  followers: mongoose.Types.ObjectId[];
+  following: mongoose.Types.ObjectId[];
   matchPassword(enteredPassword: string): Promise<boolean>;
 }
 
@@ -12,11 +17,37 @@ const UserSchema: Schema = new Schema({
     type: String,
     required: true,
     unique: true,
+    trim: true,
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
+    trim: true,
+  },
+  firstName: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  lastName: {
+    type: String,
+    required: true,
+    trim: true,
   },
   password: {
     type: String,
     required: true,
   },
+  followers: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  }],
+  following: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  }],
 });
 
 UserSchema.pre('save', async function (this: IUser, next) {

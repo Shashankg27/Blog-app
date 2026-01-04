@@ -1,10 +1,6 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import axios from '../utils/axios';
-
-export interface User {
-  _id: string;
-  username: string;
-}
+import { User } from '../types';
 
 export interface AuthContextType {
   token: string | null;

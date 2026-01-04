@@ -11,6 +11,7 @@ import LandingPage from './components/LandingPage';
 
 import AuthContext, { AuthContextType } from './context/AuthContext';
 import Profile from './components/Profile';
+import Bloggers from './components/Bloggers';
 import AllBlogs from './components/AllBlogs';
 import MyBlogs from './components/MyBlogs';
 
@@ -59,6 +60,7 @@ const Navbar: React.FC = () => {
         <div className="hidden md:flex items-center gap-8 text-sm font-medium">
           {navLink('/', 'Explore')}
           {navLink('/all-blogs', 'Blogs')}
+          {navLink('/bloggers', 'Bloggers')}
           {isAuthenticated && (
             <>
               {navLink('/create-blog', 'Write')}
@@ -81,7 +83,7 @@ const Navbar: React.FC = () => {
               {openProfile && (
                 <div className="absolute right-0 mt-3 w-44 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
                   <Link
-                    to="/profile"
+                    to={`/profile/${context.user?._id || ''}`}
                     className="flex items-center gap-2 px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition"
                   >
                     <i className="fa-regular fa-id-card" />
@@ -125,7 +127,8 @@ const App: React.FC = () => {
       <Routes>
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/profile" element={<Profile />} />
+        <Route path="/profile/:id" element={<Profile />} />
+        <Route path="/bloggers" element={<Bloggers />} />
         <Route path="/blogs/:id" element={<BlogPostDetail />} />
         <Route path="/all-blogs" element={<AllBlogs />} />
         <Route path="/my-blogs" element={<PrivateRoute element={MyBlogs} />} />

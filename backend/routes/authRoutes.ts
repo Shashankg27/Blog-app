@@ -7,6 +7,9 @@ const router = express.Router();
 
 interface RegisterBody {
   username: string;
+  email: string;
+  firstName: string;
+  lastName: string;
   password: string;
 }
 
@@ -23,16 +26,36 @@ interface JwtPayload {
 
 router.post('/register', async (req: Request<{}, {}, RegisterBody>, res: Response): Promise<void> => {
   try {
-    const { username, password } = req.body;
+    const { username, email, firstName, lastName, password } = req.body;
 
-    let user = await User.findOne({ username });
-    if (user) {
-      res.status(400).json({ message: 'User already exists' });
+    if (!username || !email || !firstName || !lastName || !password) {
+      res.status(400).json({ message: 'All fields are required' });
       return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      res.status(400).json({ message: 'Invalid email format' });
+      return;
+    }
+
+    let user = await User.findOne({ $or: [{ username }, { email }] });
+    if (user) {
+      if (user.username === username) {
+        res.status(400).json({ message: 'Username already exists' });
+        return;
+      }
+      if (user.email === email) {
+        res.status(400).json({ message: 'Email already exists' });
+        return;
+      }
     }
 
     user = new User({
       username,
+      email,
+      firstName,
+      lastName,
       password,
     });
 

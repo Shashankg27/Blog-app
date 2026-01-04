@@ -9,12 +9,15 @@ interface RegisterResponse {
 const Register: React.FC = () => {
   const [formData, setFormData] = useState({
     username: '',
+    email: '',
+    firstName: '',
+    lastName: '',
     password: '',
     password2: '',
   });
   const navigate = useNavigate();
 
-  const { username, password, password2 } = formData;
+  const { username, email, firstName, lastName, password, password2 } = formData;
 
   const onChange = (e: ChangeEvent<HTMLInputElement>): void =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -27,6 +30,9 @@ const Register: React.FC = () => {
       try {
         const res = await api.post<RegisterResponse>('/api/auth/register', {
           username,
+          email,
+          firstName,
+          lastName,
           password,
         });
         console.log(res.data);
@@ -34,7 +40,7 @@ const Register: React.FC = () => {
         navigate('/login');
       } catch (err: any) {
         console.error(err.response?.data);
-        alert('Registration failed.');
+        alert(err.response?.data?.message || 'Registration failed.');
       }
     }
   };
@@ -55,6 +61,51 @@ const Register: React.FC = () => {
               placeholder="Username"
               name="username"
               value={username}
+              onChange={onChange}
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
+              Email
+            </label>
+            <input
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              id="email"
+              type="email"
+              placeholder="Email"
+              name="email"
+              value={email}
+              onChange={onChange}
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="firstName">
+              First Name
+            </label>
+            <input
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              id="firstName"
+              type="text"
+              placeholder="First Name"
+              name="firstName"
+              value={firstName}
+              onChange={onChange}
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="lastName">
+              Last Name
+            </label>
+            <input
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              id="lastName"
+              type="text"
+              placeholder="Last Name"
+              name="lastName"
+              value={lastName}
               onChange={onChange}
               required
             />

@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 import path from 'path';
 import authRoutes from './routes/authRoutes.js';
 import blogRoutes from './routes/blogRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -62,8 +63,8 @@ app.get('/', (_req: Request, res: Response): void => {
 });
 
 app.use('/api/auth', authRoutes);
-
 app.use('/api/blogs', blogRoutes);
+app.use('/api/users', userRoutes);
 
 app.use((_req: Request, res: Response): void => {
   res.status(404).json({ message: 'Route not found' });
