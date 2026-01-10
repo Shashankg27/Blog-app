@@ -82,7 +82,7 @@ router.get('/:id', async (req: Request<{ id: string }>, res: Response): Promise<
       .populate('user', 'username firstName lastName')
       .sort({ created_at: -1 });
 
-    const blogObj = blog.toObject();
+    const blogObj = blog.toObject() as { [key: string]: any };
     blogObj.likes = blog.likes?.map(id => id.toString()) || [];
     blogObj.dislikes = blog.dislikes?.map(id => id.toString()) || [];
 
