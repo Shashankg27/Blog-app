@@ -15,11 +15,8 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 const FRONTEND_URL = process.env.FRONTEND_URL;
-if(!FRONTEND_URL){
-  throw new Error("FRONTEND_URL is not defined in environment variables");
-}
 const corsOptions: cors.CorsOptions = {
-  origin: FRONTEND_URL,
+  origin: FRONTEND_URL || true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'x-auth-token'],
@@ -71,18 +68,19 @@ app.use((_req: Request, res: Response): void => {
 });
 
 const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT, (): void => {
-  console.log(`Server running on port ${PORT}`);
-});
 
-process.on('unhandledRejection', (err: Error): void => {
-  console.error('Unhandled Promise Rejection:', err);
-});
-
-process.on('uncaughtException', (err: Error): void => {
-  console.error('Uncaught Exception:', err);
-  server.close((): void => {
-    process.exit(1);
+if(process.env.NODE_ENV !== 'production') {
+  const server = app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
   });
-});
-
+  process.on('unhandledRejection', (err: Error): void => {
+    console.error('Unhandled Promise Rejection:', err);
+  });
+  
+  process.on('uncaughtException', (err: Error): void => {
+    console.error('Uncaught Exception:', err);
+    server.close((): void => {
+      process.exit(1);
+    });
+  });
+}
