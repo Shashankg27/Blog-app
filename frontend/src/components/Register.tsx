@@ -35,7 +35,6 @@ const Register: React.FC = () => {
           lastName,
           password,
         });
-        console.log(res.data);
         alert('Registration successful!');
         navigate('/login');
       } catch (err: any) {

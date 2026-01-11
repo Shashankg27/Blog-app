@@ -196,11 +196,9 @@ const BlogEditor: React.FC = () => {
       let response;
       if (blogId) {
         response = await api.patch<Blog>(`/api/blogs/${blogId}`, blogData);
-        console.log('Draft updated:', response.data);
       } else {
         response = await api.post<Blog>('/api/blogs', blogData);
         setBlogId(response.data._id);
-        console.log('Draft saved:', response.data);
         if (!isEditing) {
           navigate(`/edit-blog/${response.data._id}`);
         }
@@ -252,10 +250,8 @@ const BlogEditor: React.FC = () => {
       let response;
       if (blogId) {
         response = await api.patch<Blog>(`/api/blogs/${blogId}`, blogData);
-        console.log('Blog updated and published:', response.data);
       } else {
         response = await api.post<Blog>('/api/blogs', blogData);
-        console.log('Blog published:', response.data);
       }
       alert('Blog published successfully!');
       navigate(`/blogs/${response.data._id}`);
