@@ -9,6 +9,9 @@ import { Blog } from '../types';
 interface UploadImageResponse {
   imageUrl: string;
 }
+interface GenerateBlogResponse {
+  content: string;
+}
 
 const BlogEditor: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -287,6 +290,21 @@ const BlogEditor: React.FC = () => {
     return <div className="container mx-auto px-4 py-8 text-center text-red-600"><p>You are not authorized to edit this blog.</p></div>;
   }
 
+  const generateBlog = async () => {
+    try {
+      setLoading(true);
+      const response = await api.post<{ content: string }>("/api/ai/generateBlog", {
+        title,
+      });
+      
+      const aiContent = response.data.content;
+      setContent(aiContent);
+      setLoading(false);
+    } catch (error) {
+      console.error("AI generation failed:", error);
+    }
+  };
+
   return (
     <div className="container mx-auto">
 
@@ -305,6 +323,7 @@ const BlogEditor: React.FC = () => {
             disabled={!!(id && blogOwnerId && user && user._id !== blogOwnerId)}
           />
         </div>
+        <button onClick={generateBlog} className="relative inline-flex items-center justify-center px-6 py-2.5 font-semibold text-white bg-gradient-to-r from-blue-400 to-blue-600 rounded-xl shadow-md transition-all duration-300 ease-out hover:from-blue-500 hover:to-blue-800 hover:shadow-lg active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 cursor-pointer my-4">Generate with AI</button>
         <div className="mb-4">
           <label htmlFor="content" className="block text-gray-700 text-sm font-bold mb-2">Content:</label>
           <ReactQuill
