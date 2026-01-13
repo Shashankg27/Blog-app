@@ -15,7 +15,7 @@ router.post('/generateBlog', async (req: Request<{}, {}, BlogBody>, res: Respons
         const { title } = req.body;
         if(!title) return res.status(400).json({ error: "Title is required!" });
 
-        const prompt = `You are a professional content writer. Write a 1000-word blog post with: Introduction, 5 subheadings, Bullet points, Conclusion, SEO keywords, Friendly tone, Topic: "${title}". Give me result in HTML as plain text, not in code format.`;
+        const prompt = `You are a professional content writer. Write a 1000-word blog post with: Introduction, 5 subheadings, Bullet points, Conclusion, SEO keywords, Friendly tone, Topic: "${title}". Give me result in HTML as plain text, not in code format and only content inside body.`;
         
         const response = await ai.models.generateContent({
             model: "gemini-3-flash-preview",

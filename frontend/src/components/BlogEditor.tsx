@@ -5,6 +5,7 @@ import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import AuthContext, { AuthContextType } from '../context/AuthContext';
 import { Blog } from '../types';
+import { DiVim } from 'react-icons/di';
 
 interface UploadImageResponse {
   imageUrl: string;
@@ -34,6 +35,7 @@ const BlogEditor: React.FC = () => {
   const [blogId, setBlogId] = useState<string | null>(null);
   const [blogOwnerId, setBlogOwnerId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [generating, setGenerating] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [blog, setBlog] = useState<Blog | null>(null);
@@ -292,15 +294,17 @@ const BlogEditor: React.FC = () => {
 
   const generateBlog = async () => {
     try {
-      setLoading(true);
+      setGenerating(true);
       const response = await api.post<{ content: string }>("/api/ai/generateBlog", {
         title,
       });
       
       const aiContent = response.data.content;
       setContent(aiContent);
-      setLoading(false);
+      setGenerating(false);
     } catch (error) {
+      setGenerating(false);
+      alert("Error generating blog!");
       console.error("AI generation failed:", error);
     }
   };
@@ -326,12 +330,20 @@ const BlogEditor: React.FC = () => {
         <button onClick={generateBlog} className="relative inline-flex items-center justify-center px-6 py-2.5 font-semibold text-white bg-gradient-to-r from-blue-400 to-blue-600 rounded-xl shadow-md transition-all duration-300 ease-out hover:from-blue-500 hover:to-blue-800 hover:shadow-lg active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 cursor-pointer my-4">Generate with AI</button>
         <div className="mb-4">
           <label htmlFor="content" className="block text-gray-700 text-sm font-bold mb-2">Content:</label>
+          {generating? <div className="flex flex-col items-center justify-center gap-3 py-6">
+              <div className="w-10 h-10 border-4 border-blue-300 border-t-blue-600 rounded-full animate-spin"></div>
+              <p className="text-blue-700 font-semibold text-sm tracking-wide">
+                Generating blog with AI… this may take a few seconds
+              </p>
+            </div>
+            :
           <ReactQuill
             value={content}
             onChange={setContent}
             className="h-64 mb-12"
             readOnly={!!(id && blogOwnerId && user && user._id !== blogOwnerId)}
           />
+          }
         </div>
         <div className="mb-4 mt-12">
           <label htmlFor="tags" className="block text-gray-700 text-sm font-bold mb-2">Tags (comma-separated):</label>
